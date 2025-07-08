@@ -1,22 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+// import axios from 'axios'; // DIHAPUS: Koneksi ke axios dihapus
 import { Plus } from 'lucide-react';
 
-// DIUBAH: Mengimpor kembali komponen-komponen dari file terpisah
 import AddNPWPModal from './AddNPWPModal.jsx';
 import NPWPCard from './NPWPCard.jsx';
 import NPWPDetailModal from './NPWPDetailModal.jsx';
 
-// Alamat base URL API backend Anda
-const API_URL = 'http://localhost:8000/api';
+// DIHAPUS: URL API tidak lagi digunakan
+// const API_URL = 'http://localhost:8000/api';
+
+// DIUBAH: Menambahkan data dummy untuk pengembangan frontend
+const dummyData = [
+  {
+    id: 1,
+    nama_pemilik: 'Hamida Faizal',
+    nomer_rekening: '1234567890',
+    email_pemilik: 'hamida@example.com',
+    foto_npwp_path: 'placeholders/npwp.png',
+    foto_ktp_path: 'placeholders/ktp.png',
+    foto_buku_rekening_path: 'placeholders/rekening.png',
+  },
+  {
+    id: 2,
+    nama_pemilik: 'Putra Mbarep',
+    nomer_rekening: '0987654321',
+    email_pemilik: 'putra@example.com',
+    foto_npwp_path: 'placeholders/npwp.png',
+    foto_ktp_path: 'placeholders/ktp.png',
+    foto_buku_rekening_path: 'placeholders/rekening.png',
+  },
+];
 
 const AkunNPWP = () => {
-  const [npwpData, setNpwpData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // DIUBAH: State diinisialisasi dengan data dummy
+  const [npwpData, setNpwpData] = useState(dummyData);
+  // DIUBAH: Loading diatur ke false karena tidak ada data yang diambil dari server
+  const [loading, setLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedNpwp, setSelectedNpwp] = useState(null);
   
+  // DIHAPUS: Fungsi fetchData dan useEffect tidak lagi diperlukan
+  /*
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -32,10 +57,22 @@ const AkunNPWP = () => {
   useEffect(() => {
     fetchData();
   }, []);
+  */
 
   const handleOpenDetail = (data) => {
     setSelectedNpwp(data);
     setIsDetailModalOpen(true);
+  };
+
+  // DIUBAH: Fungsi ini sekarang menambahkan data baru ke state lokal, bukan memuat ulang dari server
+  const handleSaveSuccess = (newData) => {
+    setNpwpData(prevData => [
+        ...prevData,
+        {
+            id: prevData.length + 1, // ID sementara
+            ...newData,
+        }
+    ]);
   };
 
   return (
@@ -68,7 +105,7 @@ const AkunNPWP = () => {
       <AddNPWPModal 
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)}
-        onSaveSuccess={fetchData}
+        onSaveSuccess={handleSaveSuccess} // DIUBAH: Menggunakan handler baru
       />
 
       <NPWPDetailModal

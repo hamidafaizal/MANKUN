@@ -4,14 +4,13 @@ import HPManage from './hpmanage/HPManage.jsx';
 import NomerSellulerManage from './nomersellulermanage/NomerSellulerManage.jsx';
 import AkunShopee from './akunshopee/AkunShopee.jsx';
 import AkunNPWP from './akunnpwp/AkunNPWP.jsx';
-// DIUBAH: Mengimpor komponen baru
 import LaporanKeuangan from './laporankeuangan/LaporanKeuangan.jsx';
-import { Search, List, Settings, UserCircle, Grid } from 'lucide-react';
+import { Menu, UserCircle } from 'lucide-react';
 
-const MainContent = ({ activePage }) => {
+const MainContent = ({ activePage, toggleSidebarPin }) => {
 
     const renderContent = () => {
-        // DIUBAH: Logika switch diperbarui
+        // DIUBAH: Case 'Laporan Keuangan' diubah menjadi 'Keuangan'.
         switch (activePage) {
             case 'Dashboard':
                 return <Dashboard />;
@@ -23,7 +22,7 @@ const MainContent = ({ activePage }) => {
                 return <AkunShopee />;
             case 'Akun NPWP':
                 return <AkunNPWP />;
-            case 'Laporan Keuangan':
+            case 'Keuangan': // Nama case telah diperbarui
                 return <LaporanKeuangan />;
             default:
                 return <Dashboard />;
@@ -31,36 +30,25 @@ const MainContent = ({ activePage }) => {
     };
 
     return (
-        <main className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-y-auto">
-            <header className="sticky top-0 z-10 flex items-center justify-between p-4 bg-gray-100/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/50">
-                <div className="relative w-full max-w-md">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <Search className="w-5 h-5 text-gray-400" />
-                    </div>
-                    <input
-                        type="search"
-                        placeholder="Search in Drive"
-                        className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                    />
+        <main className="flex-1 bg-white dark:bg-gray-900 overflow-y-auto">
+            <header className="sticky top-0 z-10 flex items-center justify-between p-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/50">
+                <div className="flex items-center gap-4">
+                    <button onClick={toggleSidebarPin} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
+                        <Menu className="w-6 h-6" />
+                    </button>
+                    <span className="text-lg font-medium text-gray-800 dark:text-gray-200">{activePage}</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                     <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
-                        <List className="w-5 h-5" />
-                    </button>
-                    <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
-                        <Grid className="w-5 h-5" />
-                    </button>
-                     <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
-                        <Settings className="w-5 h-5" />
-                    </button>
-                    <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                         <UserCircle className="w-6 h-6 text-gray-600 dark:text-gray-300"/>
+                    <button className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                         <UserCircle className="w-8 h-8 text-gray-500 dark:text-gray-400"/>
                     </button>
                 </div>
             </header>
             
-            {renderContent()}
+            <div className="p-4 md:p-6">
+              {renderContent()}
+            </div>
         </main>
     );
 };

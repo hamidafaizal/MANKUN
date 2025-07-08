@@ -1,7 +1,8 @@
 import React from 'react';
 import { X, Copy, Download } from 'lucide-react';
 
-const STORAGE_URL = 'http://localhost:8000/storage';
+// DIHAPUS: URL Storage backend tidak lagi digunakan
+// const STORAGE_URL = 'http://localhost:8000/storage';
 
 const NPWPDetailModal = ({ isOpen, onClose, data }) => {
   if (!isOpen || !data) return null;
@@ -30,8 +31,11 @@ const NPWPDetailModal = ({ isOpen, onClose, data }) => {
     </div>
   );
 
+  // DIUBAH: Komponen ImagePreview sekarang menggunakan placeholder
   const ImagePreview = ({ label, path }) => {
-    const imageUrl = `${STORAGE_URL}/${path.replace('public/', '')}`;
+    // Menggunakan layanan placeholder untuk gambar
+    const imageUrl = `https://placehold.co/400x300/E2E8F0/4A5568?text=${label.replace(' ', '+')}`;
+    
     return (
       <div className="relative group">
         <img src={imageUrl} alt={label} className="h-32 w-full object-cover rounded-md bg-gray-100 dark:bg-gray-700"/>

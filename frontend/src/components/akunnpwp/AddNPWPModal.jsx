@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
+// import axios from 'axios'; // DIHAPUS: Koneksi ke axios dihapus
 import { X } from 'lucide-react';
 
-const API_URL = 'http://localhost:8000/api';
+// DIHAPUS: URL API tidak lagi digunakan
+// const API_URL = 'http://localhost:8000/api';
 
-// Menggunakan komponen input file standar yang sudah berfungsi
 const FileInput = ({ label, id, onChange, error, fileName }) => (
   <div>
     <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -39,37 +39,29 @@ const AddNPWPModal = ({ isOpen, onClose, onSaveSuccess }) => {
     setFiles(prev => ({ ...prev, [e.target.id]: e.target.files[0] }));
   };
 
+  // DIUBAH: Logika pengiriman form diubah untuk bekerja secara lokal
   const handleFormSubmit = async (event) => {
     event.preventDefault();
     setIsSubmitting(true);
-    setErrors({});
-
-    const dataToSend = new FormData();
-    dataToSend.append('namaPemilik', formData.namaPemilik);
-    dataToSend.append('nomerRekening', formData.nomerRekening);
-    dataToSend.append('emailPemilik', formData.emailPemilik);
-    if(files.fotoNpwp) dataToSend.append('fotoNpwp', files.fotoNpwp);
-    if(files.fotoKtp) dataToSend.append('fotoKtp', files.fotoKtp);
-    if(files.fotoRekening) dataToSend.append('fotoRekening', files.fotoRekening);
     
-    try {
-      await axios.post(`${API_URL}/akun-npwp`, dataToSend, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      alert('Data berhasil disimpan!');
-      onSaveSuccess();
-      onClose();
-    } catch (error) {
-      if (error.response && error.response.status === 422) {
-        setErrors(error.response.data.errors);
-        alert('Terdapat kesalahan pada input Anda. Silakan periksa kembali.');
-      } else {
-        console.error("Gagal menyimpan data:", error);
-        alert('Terjadi kesalahan saat menyimpan data ke server.');
-      }
-    } finally {
+    // Simulasi penundaan jaringan
+    setTimeout(() => {
+      // Data yang akan dikirim ke komponen induk
+      const newLocalData = {
+        nama_pemilik: formData.namaPemilik,
+        nomer_rekening: formData.nomerRekening,
+        email_pemilik: formData.emailPemilik,
+        // Untuk frontend, kita hanya akan menyimpan nama file dummy
+        foto_npwp_path: files.fotoNpwp ? files.fotoNpwp.name : 'placeholders/npwp.png',
+        foto_ktp_path: files.fotoKtp ? files.fotoKtp.name : 'placeholders/ktp.png',
+        foto_buku_rekening_path: files.fotoRekening ? files.fotoRekening.name : 'placeholders/rekening.png',
+      };
+      
+      onSaveSuccess(newLocalData); // Memanggil fungsi dari induk dengan data baru
       setIsSubmitting(false);
-    }
+      onClose(); // Menutup modal
+      alert('Data (dummy) berhasil ditambahkan!');
+    }, 500);
   };
 
   return (
