@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
-import TransaksiTab from './TransaksiTab';
-import AnggaranTab from './AnggaranTab';
-// DIUBAH: Mengimpor komponen RekapTab yang baru
-import RekapTab from './RekapTab';
+// DIUBAH: Menyesuaikan path import sesuai struktur folder baru
+import TransaksiTab from './tab/TransaksiTab';
+import RekapTab from './tab/RekapTab';
+import SaldoTab from './tab/SaldoTab';
 
 const LaporanKeuangan = () => {
   const [activeTab, setActiveTab] = useState('Transaksi');
-  const tabs = ['Transaksi', 'Anggaran', 'Rekap'];
+  const tabs = ['Transaksi', 'Rekap', 'Saldo'];
 
   const renderContent = () => {
     switch (activeTab) {
       case 'Transaksi':
         return <TransaksiTab />;
-      case 'Anggaran':
-        return <AnggaranTab />;
-      // DIUBAH: Menggunakan komponen RekapTab
       case 'Rekap':
         return <RekapTab />;
+      case 'Saldo':
+        return <SaldoTab />;
       default:
         return <TransaksiTab />;
     }

@@ -1,33 +1,10 @@
 import React, { useState } from 'react';
-import { Calendar, Download, TrendingUp, PieChart as PieChartIcon } from 'lucide-react';
-import { MonthlyBarChart, CategoryPieChart } from './Charts';
-
-// Komponen Card lokal untuk konsistensi UI
-const Card = ({ children }) => (
-  <div className="bg-white dark:bg-gray-800/50 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
-    {children}
-  </div>
-);
-
-// Data dummy lokal
-const monthlyData = [
-  { month: 'Januari', income: 7000000, expenses: 4500000 },
-  { month: 'Februari', income: 7200000, expenses: 5000000 },
-  { month: 'Maret', income: 6800000, expenses: 4700000 },
-  { month: 'April', income: 7500000, expenses: 5200000 },
-  { month: 'Mei', income: 8000000, expenses: 6000000 },
-  { month: 'Juni', income: 7800000, expenses: 5500000 },
-];
-
-const categoryData = [
-  { category: 'Makanan', amount: 1800000, percentage: 40 },
-  { category: 'Transportasi', amount: 1000000, percentage: 22 },
-  { category: 'Tagihan', amount: 900000, percentage: 20 },
-  { category: 'Hiburan', amount: 800000, percentage: 18 },
-];
-
-// Helper format mata uang
-const formatCurrency = (value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
+import { Download } from 'lucide-react';
+// DIUBAH: Mengimpor komponen dari path baru
+import { MonthlyBarChart, CategoryPieChart } from '../components/Charts';
+import Card from '../components/Card';
+// DIUBAH: Mengimpor data dan helper dari path baru
+import { monthlyData, categoryData, formatCurrency } from '../data';
 
 const RekapTab = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');
@@ -72,7 +49,7 @@ const RekapTab = () => {
         </Card>
         <Card>
             <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Kategori Teratas</p>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{categoryData[0].category}</p>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{categoryData.reduce((max, cat) => cat.value > max.value ? cat : max, categoryData[0]).name}</p>
         </Card>
       </div>
 

@@ -1,16 +1,17 @@
 import React from 'react';
-import Dashboard from './dashboard/Dashboar.jsx'; 
+import Dashboard from './dashboard/Dashboard.jsx';
 import HPManage from './hpmanage/HPManage.jsx';
 import NomerSellulerManage from './nomersellulermanage/NomerSellulerManage.jsx';
 import AkunShopee from './akunshopee/AkunShopee.jsx';
 import AkunNPWP from './akunnpwp/AkunNPWP.jsx';
-import LaporanKeuangan from './laporankeuangan/LaporanKeuangan.jsx';
+import LaporanKeuangan from './keuangan/LaporanKeuangan.jsx'; 
+import Investor from './investor/Investor.jsx';
+import Settings from './settings/Settings.jsx'; // <-- TAMBAHKAN INI
 import { Menu, UserCircle } from 'lucide-react';
 
 const MainContent = ({ activePage, toggleSidebarPin }) => {
 
     const renderContent = () => {
-        // DIUBAH: Case 'Laporan Keuangan' diubah menjadi 'Keuangan'.
         switch (activePage) {
             case 'Dashboard':
                 return <Dashboard />;
@@ -22,8 +23,13 @@ const MainContent = ({ activePage, toggleSidebarPin }) => {
                 return <AkunShopee />;
             case 'Akun NPWP':
                 return <AkunNPWP />;
-            case 'Keuangan': // Nama case telah diperbarui
+            case 'Keuangan':
                 return <LaporanKeuangan />;
+            case 'Investor':
+                return <Investor />;
+            // DIUBAH: Menambahkan case untuk halaman 'Settings'
+            case 'Settings':
+                return <Settings />;
             default:
                 return <Dashboard />;
         }

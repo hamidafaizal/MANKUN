@@ -1,32 +1,32 @@
 import React, { useState } from 'react';
-import Sidebar from './components/Sidebar.jsx';
-import MainContent from './components/MainContent.jsx';
+import Sidebar from './components/Sidebar';
+import MainContent from './components/MainContent';
+// DIUBAH: Import SettingsModal dihapus
 
 function App() {
   const [activePage, setActivePage] = useState('Dashboard');
-  // DIUBAH: State diubah untuk mengontrol apakah sidebar 'disematkan' (pinned) atau tidak.
-  // Nilai default 'true' berarti sidebar akan terbuka penuh saat aplikasi pertama kali dimuat.
-  const [isSidebarPinned, setSidebarPinned] = useState(true);
+  const [isSidebarPinned, setIsSidebarPinned] = useState(true);
+  // DIUBAH: State untuk modal settings dihapus
 
-  // DIUBAH: Fungsi ini sekarang untuk mengubah status pin sidebar.
   const toggleSidebarPin = () => {
-    setSidebarPinned(prev => !prev);
+    setIsSidebarPinned(!isSidebarPinned);
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-50">
-      {/* DIUBAH: Meneruskan state 'isPinned' dan fungsi 'toggleSidebarPin' ke Sidebar. */}
+    // DIUBAH: <></> dihapus karena tidak lagi diperlukan
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
       <Sidebar 
         activePage={activePage} 
-        setActivePage={setActivePage} 
+        setActivePage={setActivePage}
         isPinned={isSidebarPinned}
         togglePin={toggleSidebarPin}
+        // DIUBAH: Prop untuk membuka modal dihapus
       />
-      {/* DIUBAH: Meneruskan fungsi 'toggleSidebarPin' yang sudah diperbarui ke MainContent. */}
       <MainContent 
         activePage={activePage} 
         toggleSidebarPin={toggleSidebarPin}
       />
+      {/* DIUBAH: Komponen modal dihapus dari sini */}
     </div>
   );
 }

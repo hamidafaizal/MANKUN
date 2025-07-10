@@ -7,28 +7,32 @@ import {
     Phone, 
     ShoppingBag, 
     Landmark, 
-    BookCopy, // DIUBAH: Ikon ini sekarang akan digunakan untuk "Keuangan"
+    BookCopy,
     Settings, 
-    HelpCircle 
+    HelpCircle,
+    Users
 } from 'lucide-react';
 
+// DIUBAH: Prop 'openSettingsModal' tidak lagi diperlukan
 const Sidebar = ({ activePage, setActivePage, isPinned, togglePin }) => {
     const [isHovered, setIsHovered] = useState(false);
     const isExpanded = isPinned || isHovered;
 
-    // DIUBAH: Item menu "Laporan Keuangan" diubah menjadi "Keuangan"
+    // DIUBAH: 'Settings' dipindahkan ke menu utama
     const menuItems = [
         { icon: LayoutDashboard, name: 'Dashboard' },
         { icon: Smartphone, name: 'HP Manage' },
         { icon: Phone, name: 'Nomer Selluler Manage' },
         { icon: ShoppingBag, name: 'Akun Shopee' },
         { icon: Landmark, name: 'Akun NPWP' },
-        { icon: BookCopy, name: 'Keuangan' }, // Nama telah diubah
+        { icon: BookCopy, name: 'Keuangan' },
+        { icon: Users, name: 'Investor' },
+        { icon: Settings, name: 'Settings' } // <-- DIPINDAHKAN KE SINI
     ];
 
+    // DIUBAH: 'Settings' dihapus dari menu bawah
     const bottomMenuItems = [
         { icon: HelpCircle, name: 'Help' },
-        { icon: Settings, name: 'Settings' },
     ];
 
     return (
