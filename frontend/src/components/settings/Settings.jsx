@@ -4,7 +4,8 @@ import Card from '../keuangan/components/Card';
 import api from '../../api';
 
 const Settings = () => {
-    const [kantongs, setKantongs] = useState([]);
+    // DIUBAH: State kantongs sekarang hanya untuk kantong yang bisa dialokasikan
+    const [allocatableKantongs, setAllocatableKantongs] = useState([]);
     const [allocations, setAllocations] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -13,15 +14,19 @@ const Settings = () => {
         const fetchSettingsData = async () => {
             try {
                 setLoading(true);
+                // Mengambil semua data kantong dan pengaturan yang sudah ada
                 const [kantongsRes, settingsRes] = await Promise.all([
                     api.get('/kantongs'),
                     api.get('/settings')
                 ]);
 
-                setKantongs(kantongsRes.data);
+                // DIUBAH: Filter kantong untuk hanya menampilkan yang bisa dihapus (bukan Saldo Utama)
+                const filteredKantongs = kantongsRes.data.filter(k => k.is_deletable);
+                setAllocatableKantongs(filteredKantongs);
 
+                // Menginisialisasi state alokasi berdasarkan kantong yang sudah difilter
                 const initialAllocations = {};
-                kantongsRes.data.forEach(kantong => {
+                filteredKantongs.forEach(kantong => {
                     const key = `allocation_${kantong.id}`;
                     initialAllocations[key] = settingsRes.data[key] || 0;
                 });
@@ -41,17 +46,14 @@ const Settings = () => {
 
     const handleAllocationChange = (id, value) => {
         const key = `allocation_${id}`;
-        // DIUBAH: Mengganti koma dengan titik untuk konsistensi
         const sanitizedValue = value.replace(',', '.');
         
-        // Memastikan hanya angka dan satu titik yang diterima
         if (/^\d*\.?\d*$/.test(sanitizedValue)) {
             setAllocations(prev => ({ ...prev, [key]: sanitizedValue }));
         }
     };
 
     const handleSaveChanges = async () => {
-        // Mengubah semua nilai menjadi angka sebelum dikirim
         const dataToSave = Object.fromEntries(
             Object.entries(allocations).map(([key, value]) => [key, parseFloat(value) || 0])
         );
@@ -73,6 +75,7 @@ const Settings = () => {
              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Pengaturan</h1>
+                    <p className="mt-1 text-gray-600 dark:text-gray-400">Atur alokasi dana untuk setiap kantong saat ada pemasukan.</p>
                 </div>
                 <button 
                     onClick={handleSaveChanges}
@@ -84,23 +87,28 @@ const Settings = () => {
             </div>
 
             <Card>
-                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Pengaturan Kantong</h3>
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Alokasi Dana Kantong</h3>
                 <div className="space-y-4">
-                    {kantongs.map((kantong) => (
-                        <div key={kantong.id} className="flex items-center justify-between">
-                            <label className="font-medium text-gray-800 dark:text-gray-200">{kantong.title}</label>
-                            <div className="flex items-center w-1/3 md:w-1/4">
-                                <input
-                                    // DIUBAH: tipe input menjadi 'text'
-                                    type="text"
-                                    value={allocations[`allocation_${kantong.id}`] || ''}
-                                    onChange={(e) => handleAllocationChange(kantong.id, e.target.value)}
-                                    className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-center"
-                                />
-                                <span className="ml-2 text-lg font-medium text-gray-500">%</span>
+                    {/* DIUBAH: Looping sekarang menggunakan state `allocatableKantongs` yang sudah difilter */}
+                    {allocatableKantongs.length > 0 ? (
+                        allocatableKantongs.map((kantong) => (
+                            <div key={kantong.id} className="flex items-center justify-between">
+                                <label className="font-medium text-gray-800 dark:text-gray-200">{kantong.title}</label>
+                                <div className="flex items-center w-1/3 md:w-1/4">
+                                    <input
+                                        type="text"
+                                        value={allocations[`allocation_${kantong.id}`] || ''}
+                                        onChange={(e) => handleAllocationChange(kantong.id, e.target.value)}
+                                        className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-center"
+                                        placeholder="0"
+                                    />
+                                    <span className="ml-2 text-lg font-medium text-gray-500">%</span>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    ) : (
+                        <p className="text-center text-gray-500 py-4">Tidak ada kantong yang dapat dialokasikan. Silakan tambah kantong baru di tab Saldo.</p>
+                    )}
                 </div>
             </Card>
         </div>

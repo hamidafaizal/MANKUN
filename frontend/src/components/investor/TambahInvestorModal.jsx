@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, User, Smartphone, Percent } from 'lucide-react';
 
 const TambahInvestorModal = ({ isOpen, onClose, onSave }) => {
+    // DIUBAH: Nama state disesuaikan dengan kolom database
     const [formData, setFormData] = useState({
         name: '',
         hp_units: '',
@@ -15,18 +16,14 @@ const TambahInvestorModal = ({ isOpen, onClose, onSave }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Validasi sederhana
         if (!formData.name || !formData.hp_units || !formData.profit_share) {
             alert('Semua field harus diisi.');
             return;
         }
-        onSave({
-            ...formData,
-            id: Date.now(), // ID unik sementara
-            joined: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-        });
-        onClose(); // Tutup modal setelah menyimpan
-        // Reset form
+        // Mengirim data ke parent untuk diproses (dikirim ke API)
+        onSave(formData);
+        onClose();
+        // Reset form setelah submit
         setFormData({ name: '', hp_units: '', profit_share: '' });
     };
 
@@ -43,7 +40,6 @@ const TambahInvestorModal = ({ isOpen, onClose, onSave }) => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    {/* Nama Investor */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             <User size={16} className="inline mr-2" />Nama Investor
@@ -59,7 +55,6 @@ const TambahInvestorModal = ({ isOpen, onClose, onSave }) => {
                         />
                     </div>
 
-                    {/* Jumlah HP */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             <Smartphone size={16} className="inline mr-2" />Jumlah Unit HP
@@ -75,7 +70,6 @@ const TambahInvestorModal = ({ isOpen, onClose, onSave }) => {
                         />
                     </div>
 
-                    {/* Pembagian (%) */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             <Percent size={16} className="inline mr-2" />Pembagian Laba (%)

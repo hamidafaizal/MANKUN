@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\KantongController; // <-- TAMBAHKAN INI
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\InvestorController; 
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -27,3 +28,4 @@ Route::apiResource('transaksis', TransaksiController::class);
 //rute setting
 Route::get('/settings', [SettingController::class, 'index']);
 Route::post('/settings', [SettingController::class, 'store']);
+Route::apiResource('investors', InvestorController::class)->except(['show', 'update']);

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { X, Pocket, DollarSign, Plus } from 'lucide-react';
+// DIUBAH: DollarSign dihapus karena input saldo awal dihilangkan
+import { X, Pocket, Plus } from 'lucide-react';
 
 const AddKantongModal = ({ isOpen, onClose, onSave }) => {
-    // DIUBAH: state disesuaikan dengan nama kolom di database ('title', 'amount')
+    // DIUBAH: State untuk amount/saldo awal dihilangkan
     const [title, setTitle] = useState('');
-    const [amount, setAmount] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -12,14 +12,14 @@ const AddKantongModal = ({ isOpen, onClose, onSave }) => {
             alert('Nama kantong harus diisi.');
             return;
         }
-        // DIUBAH: Mengirim objek yang sesuai dengan field backend
+        // DIUBAH: Hanya mengirim 'title' karena 'amount' tidak lagi diinput di sini
         onSave({
             title: title,
-            amount: parseFloat(amount) || 0,
+            // Saldo awal akan selalu 0 saat kantong baru dibuat
+            amount: 0,
         });
         onClose();
         setTitle('');
-        setAmount('');
     };
 
     if (!isOpen) return null;
@@ -50,19 +50,7 @@ const AddKantongModal = ({ isOpen, onClose, onSave }) => {
                         />
                     </div>
 
-                    {/* Saldo Awal */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <DollarSign size={16} className="inline mr-2" />Saldo Awal (Opsional)
-                        </label>
-                        <input 
-                            type="number" 
-                            value={amount} 
-                            onChange={(e) => setAmount(e.target.value)} 
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                            placeholder="0" 
-                        />
-                    </div>
+                    {/* DIHILANGKAN: Bagian input Saldo Awal dihapus dari form */}
 
                     <div className="flex space-x-3 pt-4">
                         <button type="button" onClick={onClose} className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500">Batal</button>
