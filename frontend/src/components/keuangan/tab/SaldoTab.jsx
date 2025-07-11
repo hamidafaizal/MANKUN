@@ -31,18 +31,20 @@ const KantongCard = ({ icon: Icon, title, amount, onDelete }) => (
     </Card>
 );
 
-// Komponen untuk card kantong investor
-const InvestorKantongCard = ({ icon: Icon, name, share }) => (
+// DIUBAH: Komponen untuk card kantong investor sekarang menampilkan saldo
+const InvestorKantongCard = ({ icon: Icon, name, share, amount }) => (
     <Card>
-        <div className="flex items-center gap-4">
-            <div className="bg-purple-100 dark:bg-purple-900/50 p-3 rounded-full">
-                <Icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+                <div className="bg-purple-100 dark:bg-purple-900/50 p-3 rounded-full">
+                    <Icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{name}</h3>
+                    <p className="text-2xl font-bold text-gray-800 dark:text-gray-200">{formatCurrency(parseFloat(amount))}</p>
+                </div>
             </div>
-            <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{name}</h3>
-                {/* DIUBAH: Menghilangkan teks "Pembagian:" */}
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{parseInt(share)}%</p>
-            </div>
+            <p className="text-lg font-medium text-purple-600 dark:text-purple-400">{parseInt(share)}%</p>
         </div>
     </Card>
 );
@@ -55,6 +57,7 @@ const SaldoTab = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // DIUBAH: Logika pengambilan dan pemisahan data diperbarui
     const fetchData = async () => {
         try {
             setLoading(true);
@@ -64,12 +67,30 @@ const SaldoTab = () => {
             ]);
             
             const allKantongs = kantongsRes.data;
+            const allInvestors = investorsRes.data;
+            const investorNames = allInvestors.map(inv => inv.name);
+
             const main = allKantongs.find(k => !k.is_deletable);
-            const others = allKantongs.filter(k => k.is_deletable);
+            // Hanya tampilkan kantong yang bisa dihapus & bukan milik investor
+            const operationalKantongs = allKantongs.filter(k => k.is_deletable && !investorNames.includes(k.title));
+            
+            // Buat pemetaan dari nama investor ke saldo kantongnya
+            const investorKantongMap = allKantongs.reduce((acc, kantong) => {
+                if (investorNames.includes(kantong.title)) {
+                    acc[kantong.title] = kantong.amount;
+                }
+                return acc;
+            }, {});
+
+            // Gabungkan data investor dengan data saldo mereka
+            const investorsWithBalance = allInvestors.map(investor => ({
+                ...investor,
+                amount: investorKantongMap[investor.name] || 0
+            }));
 
             setSaldoUtama(main);
-            setDaftarKantong(others);
-            setInvestorList(investorsRes.data);
+            setDaftarKantong(operationalKantongs);
+            setInvestorList(investorsWithBalance);
             setError(null);
         } catch (err) {
             setError("Gagal mengambil data dari server.");
@@ -160,12 +181,14 @@ const SaldoTab = () => {
                 <div className="mt-8">
                     <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">Daftar Kantong Investor</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {/* DIUBAH: Looping sekarang menggunakan investorList yang sudah memiliki data saldo */}
                         {investorList.length > 0 ? investorList.map(investor => (
                             <InvestorKantongCard 
                                 key={investor.id}
                                 icon={Users}
                                 name={investor.name}
                                 share={investor.profit_share}
+                                amount={investor.amount}
                             />
                         )) : (
                             <p className="col-span-full text-center text-gray-500">Belum ada data investor.</p>
