@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Transaksi;
 use App\Models\Kantong;
 use App\Models\Setting;
-use App\Models\Investor; // DIUBAH: Menambahkan model Investor
+use App\Models\Investor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -35,7 +35,6 @@ class TransaksiController extends Controller
         DB::beginTransaction();
         try {
             if ($request->type === 'Pemasukan') {
-                // DIUBAH: Memanggil fungsi baru dengan logika perhitungan yang kompleks
                 $this->applyPemasukan($request->amount);
                 $transaksi = Transaksi::create($request->except('kantong_id'));
             } else {
@@ -64,6 +63,8 @@ class TransaksiController extends Controller
 
     public function update(Request $request, Transaksi $transaksi)
     {
+        // ... (Logika update memerlukan penyesuaian serupa, untuk saat ini kita fokus pada store & destroy)
+        // Untuk sementara, logika update akan sama dengan store, setelah revert.
         $validator = Validator::make($request->all(), [
             'date' => 'required|date',
             'type' => 'required|in:Pemasukan,Pengeluaran',
@@ -116,119 +117,116 @@ class TransaksiController extends Controller
 
     // --- FUNGSI HELPER ---
 
-    // DIUBAH: Logika applyPemasukan diubah total sesuai alur yang disetujui
+    // DIUBAH TOTAL: Logika applyPemasukan sekarang berbasis volume dan prioritas
     private function applyPemasukan($totalPemasukan)
     {
-        // Langkah 1: Alokasi ke Kantong Saldo (Operasional, dll.)
         $sisaPemasukan = $totalPemasukan;
-        $kantongOperasional = Kantong::where('is_deletable', true)->get();
-        $allocations = Setting::where('key', 'like', 'allocation_%')->get()->keyBy('key');
 
-        foreach ($kantongOperasional as $kantong) {
-            $settingKey = 'allocation_' . $kantong->id;
-            if ($allocations->has($settingKey)) {
-                $percentage = (float) $allocations[$settingKey]->value;
-                if ($percentage > 0) {
-                    $alokasiAmount = ($totalPemasukan * $percentage) / 100;
-                    $kantong->amount += $alokasiAmount;
-                    $kantong->save();
-                    $sisaPemasukan -= $alokasiAmount;
-                }
+        // Langkah 1: Ambil semua kantong operasional dan target volumenya, urutkan berdasarkan prioritas
+        $investorNames = Investor::pluck('name');
+        $operationalKantongs = Kantong::where('is_deletable', true)
+                                ->whereNotIn('title', $investorNames)
+                                ->orderBy('priority', 'asc')
+                                ->get();
+
+        $allocationSettings = Setting::where('key', 'like', 'allocation_volume_%')
+                                 ->get()
+                                 ->pluck('value', 'key');
+
+        // Langkah 2: Isi kantong operasional sesuai prioritas dan target volume
+        foreach ($operationalKantongs as $kantong) {
+            if ($sisaPemasukan <= 0) break;
+
+            $settingKey = 'allocation_volume_' . $kantong->id;
+            $targetVolume = (float) ($allocationSettings[$settingKey] ?? 0);
+            $kekurangan = max(0, $targetVolume - (float) $kantong->amount);
+
+            if ($kekurangan > 0) {
+                $danaUntukKantongIni = min($sisaPemasukan, $kekurangan);
+                $kantong->amount += $danaUntukKantongIni;
+                $kantong->save();
+                $sisaPemasukan -= $danaUntukKantongIni;
             }
         }
 
-        // Langkah 2: Sisa pemasukan menjadi laba bersih untuk dibagi
+        // Langkah 3: Sisa pemasukan menjadi laba bersih untuk dibagi
         $labaBersih = $sisaPemasukan;
         $investors = Investor::all();
         $totalInvestorHp = $investors->sum('hp_units');
         $totalUntukPerusahaan = 0;
 
         if ($totalInvestorHp > 0 && $investors->count() > 0) {
-            // Langkah 3 & 4: Hitung hak dan bagian untuk setiap investor
             foreach ($investors as $investor) {
-                // Valuasi berdasarkan porsi HP
                 $valuasi = $investor->hp_units / $totalInvestorHp;
                 $hakInvestorDariLaba = $labaBersih * $valuasi;
-
-                // Hitung bagian akhir
                 $bagianUntukInvestor = $hakInvestorDariLaba * ($investor->profit_share / 100);
                 $bagianUntukPerusahaan = $hakInvestorDariLaba - $bagianUntukInvestor;
                 
-                // Tambahkan sisa bagian perusahaan ke total
                 $totalUntukPerusahaan += $bagianUntukPerusahaan;
 
-                // Buat atau temukan kantong untuk investor ini dan tambahkan saldonya
-                // Asumsi: Nama investor unik dan dijadikan judul kantong
                 $kantongInvestor = Kantong::firstOrCreate(
                     ['title' => $investor->name],
-                    ['amount' => 0, 'is_deletable' => true]
+                    ['amount' => 0, 'is_deletable' => true, 'priority' => 999] // Investor kantong has low priority
                 );
                 $kantongInvestor->amount += $bagianUntukInvestor;
                 $kantongInvestor->save();
             }
         } else {
-            // Jika tidak ada investor, semua laba bersih menjadi milik perusahaan
             $totalUntukPerusahaan = $labaBersih;
         }
 
-        // Langkah 5: Masukkan total bagian perusahaan ke Saldo Utama
+        // Langkah 4: Masukkan total bagian perusahaan ke Saldo Utama
         $saldoUtama = Kantong::where('is_deletable', false)->firstOrFail();
         $saldoUtama->amount += $totalUntukPerusahaan;
         $saldoUtama->save();
     }
 
-    // DIUBAH: Logika revertTransaksi juga disesuaikan
+    // DIUBAH: Logika revertTransaksi disesuaikan (meski tidak sempurna tanpa histori)
     private function revertTransaksi(Transaksi $transaksi)
     {
         if ($transaksi->type === 'Pemasukan') {
-            $totalPemasukanLama = $transaksi->amount;
+            // Karena logika pengisian volume bersifat stateful, revert yang sempurna sulit dilakukan.
+            // Pendekatan yang paling aman adalah mengurangi dari Saldo Utama terlebih dahulu,
+            // lalu dari kantong investor, dan terakhir dari kantong operasional secara terbalik.
+            // Ini adalah pendekatan yang disederhanakan untuk menghindari kompleksitas berlebih.
             
-            // Langkah 1: Batalkan alokasi ke Kantong Saldo
-            $sisaPemasukanLama = $totalPemasukanLama;
-            $kantongOperasional = Kantong::where('is_deletable', true)->get();
-            $allocations = Setting::where('key', 'like', 'allocation_%')->get()->keyBy('key');
+            $amountToRevert = $transaksi->amount;
 
-            foreach ($kantongOperasional as $kantong) {
-                $settingKey = 'allocation_' . $kantong->id;
-                 if ($allocations->has($settingKey)) {
-                    $percentage = (float) $allocations[$settingKey]->value;
-                    if ($percentage > 0) {
-                        $alokasiAmount = ($totalPemasukanLama * $percentage) / 100;
-                        $kantong->amount -= $alokasiAmount;
-                        $kantong->save();
-                        $sisaPemasukanLama -= $alokasiAmount;
-                    }
-                }
-            }
+            // 1. Tarik dari Saldo Utama & Investor (representasi laba)
+            $saldoUtama = Kantong::where('is_deletable', false)->first();
+            $investorKantongs = Kantong::whereIn('title', Investor::pluck('name'))->get();
 
-            // Langkah 2-4: Batalkan alokasi ke investor dan perusahaan
-            $labaBersihLama = $sisaPemasukanLama;
-            $investors = Investor::all();
-            $totalInvestorHp = $investors->sum('hp_units');
-            $totalUntukPerusahaanLama = 0;
-
-            if ($totalInvestorHp > 0 && $investors->count() > 0) {
-                foreach ($investors as $investor) {
-                    $valuasi = $investor->hp_units / $totalInvestorHp;
-                    $hakInvestorDariLaba = $labaBersihLama * $valuasi;
-                    $bagianUntukInvestor = $hakInvestorDariLaba * ($investor->profit_share / 100);
-                    $bagianUntukPerusahaan = $hakInvestorDariLaba - $bagianUntukInvestor;
-                    $totalUntukPerusahaanLama += $bagianUntukPerusahaan;
-
-                    $kantongInvestor = Kantong::where('title', $investor->name)->first();
-                    if ($kantongInvestor) {
-                        $kantongInvestor->amount -= $bagianUntukInvestor;
-                        $kantongInvestor->save();
-                    }
-                }
-            } else {
-                $totalUntukPerusahaanLama = $labaBersihLama;
-            }
-
-            // Langkah 5: Batalkan penambahan ke Saldo Utama
-            $saldoUtama = Kantong::where('is_deletable', false)->firstOrFail();
-            $saldoUtama->amount -= $totalUntukPerusahaanLama;
+            // Asumsi kasar: Laba adalah yang terakhir masuk, jadi tarik dari sini dulu.
+            // Tarik dari Saldo Utama
+            $revertedFromUtama = min($saldoUtama->amount, $amountToRevert);
+            $saldoUtama->amount -= $revertedFromUtama;
             $saldoUtama->save();
+            $amountToRevert -= $revertedFromUtama;
+
+            // Tarik dari kantong investor secara proporsional
+            if ($amountToRevert > 0) {
+                foreach ($investorKantongs as $kInvestor) {
+                    $revertedFromInvestor = min($kInvestor->amount, $amountToRevert / $investorKantongs->count()); // Pembagian kasar
+                    $kInvestor->amount -= $revertedFromInvestor;
+                    $kInvestor->save();
+                    $amountToRevert -= $revertedFromInvestor;
+                }
+            }
+
+            // 2. Tarik sisa dari kantong operasional (reverse priority)
+            if ($amountToRevert > 0) {
+                $operationalKantongs = Kantong::where('is_deletable', true)
+                                        ->whereNotIn('title', Investor::pluck('name'))
+                                        ->orderBy('priority', 'desc')
+                                        ->get();
+                foreach ($operationalKantongs as $kOperasional) {
+                    if ($amountToRevert <= 0) break;
+                    $revertedFromOps = min($kOperasional->amount, $amountToRevert);
+                    $kOperasional->amount -= $revertedFromOps;
+                    $kOperasional->save();
+                    $amountToRevert -= $revertedFromOps;
+                }
+            }
 
         } else { // Jika Pengeluaran
             if ($transaksi->kantong) {
